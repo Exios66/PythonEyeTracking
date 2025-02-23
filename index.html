@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Real-time eye tracking interface with calibration and gaze heatmap visualization">
+    <title>Eye Tracking Interface</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/heatmap.js/2.0.2/heatmap.min.js"></script>
+    <style>
+        :root {
+            --primary-color: #007bff;
+            --success-color: #28a745;
+            --danger-color: #dc3545;
+        }
+
+        body {
+            background-color: #f8f9fa;
+            text-align: center;
+            font-family: 'Segoe UI', Roboto, sans-serif;
+        }
+
+        .video-container {
+            position: relative;
+            display: inline-block;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        #video-feed {
+            display: block;
+            background-color: #000;
+        }
+
+        #gaze-overlay, #heatmap-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+
+        .controls {
+            margin: 20px 0;
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .calibration {
+            max-width: 400px;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .slider-container {
+            margin: 15px 0;
+        }
+
+        .slider-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+        }
+
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-left: 8px;
+        }
+
+        .status-connected {
+            background-color: var(--success-color);
+        }
+
+        .status-disconnected {
+            background-color: var(--danger-color);
+        }
+
+        .debug-panel {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background-color: rgba(0, 0, 0, 0.8);
+            color: #fff;
+            padding: 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            text-align: left;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container mt-5">
+        <h1 class="mb-4">Eye Tracking Interface</h1>
+        <div class="connection-status mb-3">
+            Status: <span id="connection-status">Disconnected</span>
+            <span class="status-indicator status-disconnected" id="status-indicator"></span>
+        </div>
+
+        <div class="video-container">
+            <video id="video-feed" width="640" height="480" autoplay playsinline></video>
+            <canvas id="gaze-overlay" width="640" height="480"></canvas>
+            <canvas id="heatmap-canvas" width="640" height="480"></canvas>
+        </div>
+
+        <div class="controls">
+            <button id="start-tracking" class="btn btn-success">Start Tracking</button>
+            <button id="stop-tracking" class="btn btn-danger" disabled>Stop Tracking</button>
+            <button id="calibrate" class="btn btn-warning">Calibrate</button>
+            <button id="download-data" class="btn btn-primary" disabled>Download Data</button>
+            <button id="toggle-debug" class="btn btn-secondary">Toggle Debug</button>
+        </div>
+
+        <div class="calibration">
+            <h4>Calibration Settings</h4>
+            <div class="slider-container">
+                <div class="slider-label">
+                    <span>Sensitivity</span>
+                    <span id="sensitivity-value">5</span>
+                </div>
+                <input type="range" id="sensitivity" min="1" max="10" value="5">
+            </div>
+            <div class="slider-container">
+                <div class="slider-label">
+                    <span>Smoothing</span>
+                    <span id="smoothing-value">5</span>
+                </div>
+                <input type="range" id="smoothing" min="1" max="10" value="5">
+            </div>
+        </div>
+    </div>
+
+    <div id="debug-panel" class="debug-panel">
+        <div>FPS: <span id="fps">0</span></div>
+        <div>Latency: <span id="latency">0</span>ms</div>
+        <div>Gaze Position: <span id="gaze-position">0, 0</span></div>
+        <div>Data Points: <span id="data-points">0</span></div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+
+    <script>
+        class EyeTrackingApp {
+            constructor() {
+                this.video = document.getElementById("video-feed");
+                this.canvas = document.getElementById("gaze-overlay");
+                this.ctx = this.canvas.getContext("2d");
+                this.heatmapInstance = h337.create({ container: document.getElementById("heatmap-canvas") });
+                this.gazeData = [];
+                this.isTracking = false;
+
+                this.initializeWebSocket();
+                this.initializeEventListeners();
+                this.initializeCamera();
+            }
+
+            initializeWebSocket() {
+                this.socket = new WebSocket("ws://localhost:5000/ws");
+                this.socket.onopen = () => this.updateConnectionStatus(true);
+                this.socket.onclose = () => this.updateConnectionStatus(false);
+                this.socket.onerror = () => this.updateConnectionStatus(false);
+                this.socket.onmessage = (event) => this.handleGazeData(JSON.parse(event.data));
+            }
+
+            handleGazeData(data) {
+                if (!this.isTracking) return;
+                this.gazeData.push(data);
+                this.updateGazeVisualization(data);
+                this.updateHeatmap(data);
+            }
+
+            updateGazeVisualization(data) {
+                this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+                this.ctx.fillStyle = "rgba(255, 0, 0, 0.6)";
+                this.ctx.beginPath();
+                this.ctx.arc(data.x, data.y, 10, 0, Math.PI * 2);
+                this.ctx.fill();
+            }
+
+            updateHeatmap(data) {
+                this.heatmapInstance.addData({ x: data.x, y: data.y, value: 1 });
+            }
+
+            updateConnectionStatus(connected) {
+                document.getElementById("connection-status").textContent = connected ? "Connected" : "Disconnected";
+                document.getElementById("status-indicator").className = `status-indicator ${connected ? 'status-connected' : 'status-disconnected'}`;
+            }
+
+            async initializeCamera() {
+                const stream = await navigator.mediaDevices.getUserMedia({ video: { width: 640, height: 480, facingMode: "user" } });
+                this.video.srcObject = stream;
+            }
+
+            initializeEventListeners() {
+                document.getElementById("start-tracking").addEventListener("click", () => this.isTracking = true);
+                document.getElementById("stop-tracking").addEventListener("click", () => this.isTracking = false);
+            }
+        }
+
+        window.onload = () => new EyeTrackingApp();
+    </script>
+</body>
+</html>
