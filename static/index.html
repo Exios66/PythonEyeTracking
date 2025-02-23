@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Real-time eye tracking interface with calibration and heatmap visualization">
+    <title>Eye Tracking Interface</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <script src="js/heatmap.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <h1>Eye Tracking Interface</h1>
+        <div class="video-container">
+            <video id="video-feed" width="640" height="480" autoplay></video>
+            <canvas id="gaze-overlay" width="640" height="480"></canvas>
+            <canvas id="heatmap-canvas" width="640" height="480"></canvas>
+        </div>
+        <div class="controls">
+            <button id="start-tracking" class="btn btn-success">Start Tracking</button>
+            <button id="stop-tracking" class="btn btn-danger" disabled>Stop Tracking</button>
+            <button id="download-data" class="btn btn-primary" disabled>Download Data</button>
+        </div>
+    </div>
+
+    <script src="js/script.js"></script>
+</body>
+</html>
