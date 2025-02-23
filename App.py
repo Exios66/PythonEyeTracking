@@ -2,16 +2,15 @@ import json
 import threading
 import time
 import logging
-from flask import Flask, jsonify, request, send_file
+from flask import Flask, jsonify, request, render_template, send_file
 from flask_cors import CORS
 from flask_sock import Sock
 import pyeyetrack  # Ensure this library is installed
-import os
 
 # Configure Logging
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 
-app = Flask(__name__)
+app = Flask(__name__, template_folder="templates", static_folder="static")
 CORS(app)
 sock = Sock(app)
 
@@ -54,11 +53,24 @@ def track_gaze():
     eye_tracker.stop()
     logging.info("Eye tracking stopped.")
 
+# Home Route - Loads Eye Tracking UI
+@app.route('/')
+def home():
+    return render_template('index.html')
+
+# Settings Page Route
+@app.route('/settings')
+def settings_page():
+    return render_template('settings.html', settings=settings)
+
+# Download Page Route
+@app.route('/download')
+def download_page():
+    return render_template('download.html')
+
+# API: Start Tracking
 @app.route('/start-tracking', methods=['POST'])
 def start_tracking():
-    """
-    Start eye tracking and initiate background tracking thread.
-    """
     global tracking
     if tracking:
         return jsonify({"status": "Already tracking"}), 200
@@ -69,28 +81,22 @@ def start_tracking():
     
     return jsonify({"status": "Tracking started"}), 200
 
+# API: Stop Tracking
 @app.route('/stop-tracking', methods=['POST'])
 def stop_tracking():
-    """
-    Stop eye tracking.
-    """
     global tracking
     tracking = False
     return jsonify({"status": "Tracking stopped"}), 200
 
+# API: Retrieve Gaze Data
 @app.route('/gaze-data', methods=['GET'])
 def get_gaze_data():
-    """
-    Retrieve all gaze tracking data collected so far.
-    """
     with lock:
         return jsonify(gaze_data), 200
 
+# API: Update Settings
 @app.route('/update-settings', methods=['POST'])
 def update_settings():
-    """
-    Update tracking settings like sensitivity and smoothing.
-    """
     global settings
     try:
         new_settings = request.json
@@ -101,11 +107,9 @@ def update_settings():
         logging.error(f"Error updating settings: {e}")
         return jsonify({"status": "Error", "message": str(e)}), 400
 
+# WebSocket Route for Real-Time Tracking
 @sock.route('/ws')
 def gaze_ws(ws):
-    """
-    WebSocket route for real-time gaze data streaming.
-    """
     global ws_clients
     ws_clients.add(ws)
     
@@ -120,39 +124,31 @@ def gaze_ws(ws):
         ws_clients.discard(ws)
         logging.info("WebSocket client disconnected")
 
+# API: Download Gaze Data
 @app.route('/download-data', methods=['GET'])
 def download_data():
-    """
-    Allow users to download gaze data as JSON.
-    """
     with lock:
-        file_path = "gaze_data.json"
+        file_path = "data/gaze_data.json"
         with open(file_path, "w") as file:
             json.dump(gaze_data, file)
         return send_file(file_path, as_attachment=True)
 
+# API: Start Calibration
 @app.route('/start-calibration', methods=['POST'])
 def start_calibration():
-    """
-    Simulate calibration sequence.
-    """
     logging.info("Calibration started.")
     time.sleep(5)
     logging.info("Calibration completed.")
     return jsonify({"status": "Calibration completed"}), 200
 
+# App Initialization
 @app.before_first_request
 def before_first_request():
-    """
-    Function to run before the first request.
-    """
     logging.info("Server started. Ready to accept connections.")
 
+# Graceful Shutdown
 @app.teardown_appcontext
 def cleanup(exception=None):
-    """
-    Graceful shutdown and cleanup.
-    """
     global tracking
     tracking = False
     logging.info("Cleaning up resources before shutdown.")
