@@ -1,0 +1,20 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Virtual environment
+venv/
+.env
+
+# Logs and cache
+*.log
+*.cache
+
+# IDE Specific
+.vscode/
+.idea/
+
+# Node.js dependencies (if applicable)
+node_modules/
