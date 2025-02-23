@@ -119,34 +119,39 @@
         </div>
 
         <div class="video-container">
-            <video id="video-feed" width="640" height="480" autoplay playsinline></video>
+            <video id="video-feed" width="640" height="480" autoplay 
+                   playsinline webkit-playsinline 
+                   data-fallback="Your browser may not support inline video playback">
+            </video>
             <canvas id="gaze-overlay" width="640" height="480"></canvas>
             <canvas id="heatmap-canvas" width="640" height="480"></canvas>
         </div>
 
         <div class="controls">
-            <button id="start-tracking" class="btn btn-success">Start Tracking</button>
-            <button id="stop-tracking" class="btn btn-danger" disabled>Stop Tracking</button>
-            <button id="calibrate" class="btn btn-warning">Calibrate</button>
-            <button id="download-data" class="btn btn-primary" disabled>Download Data</button>
-            <button id="toggle-debug" class="btn btn-secondary">Toggle Debug</button>
+            <button type="button" id="start-tracking" class="btn btn-success">Start Tracking</button>
+            <button type="button" id="stop-tracking" class="btn btn-danger" disabled>Stop Tracking</button>
+            <button type="button" id="calibrate" class="btn btn-warning">Calibrate</button>
+            <button type="button" id="download-data" class="btn btn-primary" disabled>Download Data</button>
+            <button type="button" id="toggle-debug" class="btn btn-secondary">Toggle Debug</button>
         </div>
 
         <div class="calibration">
             <h4>Calibration Settings</h4>
             <div class="slider-container">
                 <div class="slider-label">
-                    <span>Sensitivity</span>
+                    <label for="sensitivity">Sensitivity</label>
                     <span id="sensitivity-value">5</span>
                 </div>
-                <input type="range" id="sensitivity" min="1" max="10" value="5">
+                <input type="range" id="sensitivity" min="1" max="10" value="5" 
+                       aria-label="Sensitivity" title="Adjust tracking sensitivity">
             </div>
             <div class="slider-container">
                 <div class="slider-label">
-                    <span>Smoothing</span>
+                    <label for="smoothing">Smoothing</label>
                     <span id="smoothing-value">5</span>
                 </div>
-                <input type="range" id="smoothing" min="1" max="10" value="5">
+                <input type="range" id="smoothing" min="1" max="10" value="5" 
+                       aria-label="Smoothing" title="Adjust tracking smoothing">
             </div>
         </div>
     </div>

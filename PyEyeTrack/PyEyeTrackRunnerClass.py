@@ -1,8 +1,8 @@
-from pyEyeTrack.EyeTracking.PupilTrackingClass import PupilTracking
-from pyEyeTrack.EyeTracking.BlinkingClass import Blinking
-from pyEyeTrack.EyeTracking.PupilBlinkingClass import PupilBlinking
-from pyEyeTrack.AudioVideoRecording.VideoRecordingClass import VideoRecorder
-from pyEyeTrack.AudioVideoRecording.AudioRecordingClass import AudioRecorder
+from PyEyeTrack.EyeTracking.PupilTrackingClass import PupilTracking
+from PyEyeTrack.EyeTracking.BlinkingClass import Blinking
+from PyEyeTrack.EyeTracking.PupilBlinkingClass import PupilBlinking
+from PyEyeTrack.AudioVideoRecording.VideoRecordingClass import VideoRecorder
+from PyEyeTrack.AudioVideoRecording.AudioRecordingClass import AudioRecorder
 import threading
 import importlib
 import sys
@@ -81,7 +81,7 @@ class pyEyeTrack():
             Default: 'audio'.
 
             destinationPath (str, optional): The parameter enables the user to specify 
-            the location of the output files. Default: ‘/Output’.
+            the location of the output files. Default: 'Output'.
 
         """
 

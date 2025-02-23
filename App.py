@@ -5,7 +5,7 @@ import logging
 from flask import Flask, jsonify, request, render_template, send_file
 from flask_cors import CORS
 from flask_sock import Sock
-import pyeyetrack  # Ensure this library is installed
+from PyEyeTrack.PyEyeTrackRunnerClass import pyEyeTrack  # Import from local package
 
 # Configure Logging
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
@@ -21,7 +21,7 @@ gaze_data = []
 settings = {"sensitivity": 5, "smoothing": 5}
 
 # Initialize Eye Tracker
-eye_tracker = pyeyetrack.EyeTracker()
+eye_tracker = pyEyeTrack.EyeTracker()
 lock = threading.Lock()
 
 def track_gaze():
