@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+
+{% block title %}Settings - Eye Tracking{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2 class="text-center">Eye Tracking Settings</h2>
+
+    <div class="calibration mt-4 p-4 bg-light rounded">
+        <h4>Calibration Controls</h4>
+        <button id="calibrate" class="btn btn-warning">Start Calibration</button>
+    </div>
+
+    <div class="settings mt-4 p-4 bg-light rounded">
+        <h4>Tracking Settings</h4>
+        
+        <div class="form-group">
+            <label for="sensitivity">Sensitivity: <span id="sensitivity-value">5</span></label>
+            <input type="range" id="sensitivity" min="1" max="10" value="5">
+        </div>
+
+        <div class="form-group">
+            <label for="smoothing">Smoothing: <span id="smoothing-value">5</span></label>
+            <input type="range" id="smoothing" min="1" max="10" value="5">
+        </div>
+
+        <button id="save-settings" class="btn btn-success mt-3">Save Settings</button>
+    </div>
+</div>
+
+<script>
+document.getElementById("calibrate").addEventListener("click", () => {
+    fetch('/start-calibration', { method: 'POST' })
+        .then(response => response.json())
+        .then(data => alert(data.status))
+        .catch(error => console.error("Calibration error:", error));
+});
+
+document.getElementById("save-settings").addEventListener("click", () => {
+    const sensitivity = document.getElementById("sensitivity").value;
+    const smoothing = document.getElementById("smoothing").value;
+
+    fetch('/update-settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sensitivity, smoothing })
+    })
+    .then(response => response.json())
+    .then(data => alert(data.status))
+    .catch(error => console.error("Settings update error:", error));
+});
+</script>
+{% endblock %}
