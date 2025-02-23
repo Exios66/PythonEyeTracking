@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+
+{% block title %}Home - Eye Tracking{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2 class="text-center">Real-Time Eye Tracking</h2>
+    <div class="video-container mt-4">
+        <video id="video-feed" width="640" height="480" autoplay></video>
+        <canvas id="gaze-overlay" width="640" height="480"></canvas>
+        <canvas id="heatmap-canvas" width="640" height="480"></canvas>
+    </div>
+
+    <div class="controls mt-4 text-center">
+        <button id="start-tracking" class="btn btn-success">Start Tracking</button>
+        <button id="stop-tracking" class="btn btn-danger" disabled>Stop Tracking</button>
+        <button id="download-data" class="btn btn-primary" disabled>Download Data</button>
+    </div>
+
+    <div class="debug-panel mt-3 p-3 bg-light rounded">
+        <h5>Debug Info</h5>
+        <p>FPS: <span id="fps">0</span></p>
+        <p>Latency: <span id="latency">0</span> ms</p>
+        <p>Gaze Position: <span id="gaze-position">0, 0</span></p>
+    </div>
+</div>
+{% endblock %}
